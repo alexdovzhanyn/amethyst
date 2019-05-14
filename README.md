@@ -20,7 +20,7 @@ that Erlang is installed on your machine. If Erlang is not yet installed on your
 machine, download it from
 [the Erlang website](http://www.erlang.org/downloads).
 
-Once Elixir is installed, clone this repository and compile:
+Once Erlang is installed, clone this repository and compile:
 
 ```bash
 git clone https://github.com/alexdovzhanyn/amethyst.git
