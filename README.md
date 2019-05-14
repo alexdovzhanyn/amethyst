@@ -1,4 +1,4 @@
-# Amethyst
+![Amethyst Logo](https://repository-images.githubusercontent.com/186478823/bc98ad00-75ba-11e9-96c8-9e25faaa440e)
 
 A compiled functional programming language built with Elixir. This is not intended
 for production use and is built for educational purposes.
