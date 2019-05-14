@@ -7,7 +7,11 @@ defmodule Amethyst.CLI do
 
     case command do
       "compile" -> compile(args)
-      _ -> IO.puts("Lucid command not found: '#{command}'")
+      "-v" ->
+        {:ok, v} = :application.get_key(:amethyst, :vsn)
+        IO.puts "\nAmethyst #{v}"
+        # IO.inspect(:application.get_all_key(:amethyst))
+      _ -> IO.puts("Amethyst command not found: '#{command}'")
     end
   end
 

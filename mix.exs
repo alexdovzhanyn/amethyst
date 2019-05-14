@@ -28,6 +28,8 @@ defmodule Amethyst.MixProject do
   end
 
   defp escript do
-    [main_module: Amethyst.CLI]
+    [
+      main_module: Amethyst.CLI
+    ]
   end
 end

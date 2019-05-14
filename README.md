@@ -15,10 +15,10 @@ not be implemented.
 * Compiles to WebAssembly
 
 ## Compiling from source
-It is currently only possible to compile Amethyst from source. Amethyst is built
-with Elixir and therefore requires that Elixir is installed on your machine. If
-Elixir is not yet installed on your machine, follow the guide on
-[the Elixir website](https://elixir-lang.org/install.html).
+It is currently only possible to compile Amethyst from source. Amethyst requires
+that Erlang is installed on your machine. If Erlang is not yet installed on your
+machine, download it from
+[the Erlang website](http://www.erlang.org/downloads).
 
 Once Elixir is installed, clone this repository and compile:
 
