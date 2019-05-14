@@ -1,12 +1,36 @@
 ![Amethyst Logo](https://repository-images.githubusercontent.com/186478823/bc98ad00-75ba-11e9-96c8-9e25faaa440e)
 
-A compiled functional programming language built with Elixir. This is not intended
+Amethyst is a compiled functional programming language. This is not intended
 for production use and is built for educational purposes.
 
-## Installation
+## Features of Amethyst
+**Note:** Amethyst is in early development and features listed here may or may
+not be implemented.
 
-**TODO**
+* Simple, easy to read syntax
+* Immutable
+* Dynamic definitions
+* Javascript-like arrow functions
+* Native decimal support
+* Compiles to WebAssembly
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/lucid](https://hexdocs.pm/lucid).
+## Compiling from source
+It is currently only possible to compile Amethyst from source. Amethyst is built
+with Elixir and therefore requires that Elixir is installed on your machine. If
+Elixir is not yet installed on your machine, follow the guide on
+[the Elixir website](https://elixir-lang.org/install.html).
+
+Once Elixir is installed, clone this repository and compile:
+
+```bash
+git clone https://github.com/alexdovzhanyn/amethyst.git
+cd amethyst
+mix escript.build
+```
+
+Add the generated `amethyst` file to your path to use the Amethyst CLI.
+
+## Bug Reports
+To report a bug, [visit our issue tracker](https://github.com/alexdovzhanyn/amethyst/issues)
+and create a new issue. Please be as descriptive of the issue as possible and
+provide any steps necessary for recreation.

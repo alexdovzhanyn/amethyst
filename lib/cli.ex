@@ -12,7 +12,7 @@ defmodule Amethyst.CLI do
   end
 
   def compile([path | args]) do
-    with true <- String.ends_with?(path, ".luc") || {:error, :invft},
+    with true <- String.ends_with?(path, ".amt") || {:error, :invft},
          {:ok, src} <- File.read(path)
     do
       Amethyst.Lexer.tokenize(src)
