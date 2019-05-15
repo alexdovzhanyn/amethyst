@@ -1,2 +1,11 @@
 xyz = "hello"
 apples = 'oranges'
+
+my_int = (231123)
+my_float = 32.123131
+my_decimal = 313..3123
+my_array = [1, 2, 3]
+
+15 === 23
+
+123.231.1
