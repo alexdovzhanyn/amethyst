@@ -38,6 +38,9 @@ defmodule Amethyst.Lexer do
   defp parse_src("==" <> src, _ln, _pos), do: {:==, src}
   defp parse_src("=>" <> src, _ln, _pos), do: {:arrow, src}
   defp parse_src("=" <> src, _ln, _pos), do: {:=, src}
+  defp parse_src("||" <> src, _ln, _pos), do: {:||, src}
+  defp parse_src("&&" <> src, _ln, _pos), do: {:&&, src}
+  defp parse_src("!" <> src, _ln, _pos), do: {:!, src}
   defp parse_src("true" <> src, _ln, _pos), do: {{:boolean, "true"}, src}
   defp parse_src("false" <> src, _ln, _pos), do: {{:boolean, "false"}, src}
   defp parse_src("if" <> src, _ln, _pos), do: {{:token, "if"}, src}
@@ -45,18 +48,26 @@ defmodule Amethyst.Lexer do
   defp parse_src("else" <> src, _ln, _pos), do: {{:token, "else"}, src}
   defp parse_src("end" <> src, _ln, _pos), do: {{:token, "end"}, src}
   defp parse_src("func" <> src, _ln, _pos), do: {{:token, "func"}, src}
+  defp parse_src("<::" <> src, _ln, _pos), do: {{:structure, "<::"}, src}
+  defp parse_src("::>" <> src, _ln, _pos), do: {{:structure, "::>"}, src}
+  defp parse_src("+" <> src, _ln, _pos), do: {{:op, "+"}, src}
+  defp parse_src("**" <> src, _ln, _pos), do: {{:op, "**"}, src}
+  defp parse_src("*" <> src, _ln, _pos), do: {{:op, "*"}, src}
+  defp parse_src("/" <> src, _ln, _pos), do: {{:op, "/"}, src}
 
   defp parse_src("--" <> src, _ln, _pos) do
     [_comment, rest] = String.split(src, "\n", parts: 2)
     {:comment, "\n" <> rest}
   end
 
+  defp parse_src("-" <> src, _ln, _pos), do: {{:op, "-"}, src}
+
   defp parse_src(<<c::bytes-size(1), src::binary>>, _ln, _pos) when c in ["\"", "'"] do
     [string, rest] = String.split(src, c, parts: 2)
     {{:string, string}, rest}
   end
 
-  defp parse_src(<<c::bytes-size(1), src::binary>>, _ln, _pos) when c in ["[", "]", "{", "}", "(", ")", ","] do
+  defp parse_src(<<c::bytes-size(1), src::binary>>, _ln, _pos) when c in ["[", "]", "{", "}", "(", ")", ",", "|", ":"] do
     {{:construct, c}, src}
   end
 
@@ -65,12 +76,15 @@ defmodule Amethyst.Lexer do
   defp parse_src(<<char::bytes-size(1), src::binary>>, ln, pos) do
     cond do
       Regex.match?(~r/[a-zA-Z]/, char) ->
-        [symbol, rest] = String.split(src, ~r/[^a-zA-Z0-9_$]/, parts: 2)
+        case String.split(src, ~r/[^a-zA-Z0-9_$]/, parts: 2) do
+          [symbol, rest] ->
+            # When we split on the regex we lose a character at the point of the split.
+            # Let's find it and add it back to the src so it gets parsed
+            split_char = String.at(src, String.length(symbol))
+            {{:symbol, char <> symbol}, split_char <> rest}
+          [""] -> {{:symbol, char}, src}
+        end
 
-        # When we split on the regex we lose a character at the point of the split.
-        # Let's find it and add it back to the src so it gets parsed
-        split_char = String.at(src, String.length(symbol))
-        {{:symbol, char <> symbol}, split_char <> rest}
       Regex.match?(~r/[0-9]/, char) -> scan_number(char, src, ln, pos)
       true -> Exception.raise(:syntax_error, "syntax error at '#{char}' [#{ln}:#{pos}]")
     end
@@ -106,9 +120,16 @@ defmodule Amethyst.Lexer do
 
   defp update_counters(:newline, ln, _pos), do: {ln + 1, 1}
   defp update_counters(:comment, ln, pos), do: {ln, pos}
-  defp update_counters(:==, ln, pos), do: {ln, pos + 2}
   defp update_counters(:whitespace, ln, pos), do: {ln, pos + 1}
-  defp update_counters(:=, ln, pos), do: {ln, pos + 1}
   defp update_counters(:arrow, ln, pos), do: {ln, pos + 2}
   defp update_counters({_, val}, ln, pos), do: {ln, pos + String.length(val)}
+
+  defp update_counters(atom, ln, pos) when is_atom(atom) do
+    l =
+      atom
+      |> to_string()
+      |> String.length()
+
+    {ln, pos + l}
+  end
 end

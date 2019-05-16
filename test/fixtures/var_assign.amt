@@ -1,11 +1,16 @@
 xyz = "hello"
 apples = 'oranges'
 
+a = 1
+
 my_int = (231123)
 my_float = 32.123131
 my_decimal = 313..3123
 my_array = [1, 2, 3]
 my_bool = true
+my_tuple = |1, 2, 3|
+my_keyword_map = {a: 'b', apple: 'orange', number: 5}
+-- my_binary_data = <::0x1, 0x23, 0x42::>
 
 15 == 23
 
@@ -22,3 +27,13 @@ end
 some_lambda = (p1, p2) => {
   -- does stuff here
 }
+
+5 + 5
+10 - 3
+100 * 12
+10**2
+15 / 3
+
+!true
+
+true || false && !x
