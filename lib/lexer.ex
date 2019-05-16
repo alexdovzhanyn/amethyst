@@ -11,7 +11,7 @@ defmodule Amethyst.Lexer do
     amethyst_src
     |> String.trim() # Trim entire source leading + trailing whitespace
     |> create_tokens()
-    |> IO.inspect()
+    |> IO.inspect(limit: :infinity)
   end
 
   defp create_tokens(src, tokens \\ [], ln \\ 1, pos \\ 1)
@@ -39,6 +39,15 @@ defmodule Amethyst.Lexer do
   defp parse_src("=" <> src, _ln, _pos), do: {:=, src}
   defp parse_src("true" <> src, _ln, _pos), do: {{:boolean, "true"}, src}
   defp parse_src("false" <> src, _ln, _pos), do: {{:boolean, "false"}, src}
+  defp parse_src("if" <> src, _ln, _pos), do: {{:token, "if"}, src}
+  defp parse_src("then" <> src, _ln, _pos), do: {{:token, "then"}, src}
+  defp parse_src("else" <> src, _ln, _pos), do: {{:token, "else"}, src}
+  defp parse_src("end" <> src, _ln, _pos), do: {{:token, "end"}, src}
+
+  defp parse_src("--" <> src, _ln, _pos) do
+    [_comment, rest] = String.split(src, "\n", parts: 2)
+    {:comment, "\n" <> rest}
+  end
 
   defp parse_src(<<c::bytes-size(1), src::binary>>, _ln, _pos) when c in ["\"", "'"] do
     [string, rest] = String.split(src, c, parts: 2)
@@ -76,7 +85,7 @@ defmodule Amethyst.Lexer do
     cond do
       Regex.match?(~r/[^\.0-9]/, char) -> finish_number_scan(num, src)
       char == "." && String.last(num) != "." && String.contains?(num, ".") ->
-        Exception.raise(:syntax_error, "syntax error at '#{char}' [#{ln}:#{pos}]")
+        Exception.raise(:syntax_error, "syntax error at '#{char}' [#{ln}:#{pos + 1}]")
       true -> scan_number(num <> char, rest, ln, pos + 1)
     end
   end
@@ -94,7 +103,9 @@ defmodule Amethyst.Lexer do
   end
 
   defp update_counters(:newline, ln, _pos), do: {ln + 1, 1}
+  defp update_counters(:comment, ln, pos), do: {ln, pos}
   defp update_counters(:==, ln, pos), do: {ln, pos + 2}
-  defp update_counters(t, ln, pos) when t in [:whitespace, :=], do: {ln, pos + 1}
+  defp update_counters(:whitespace, ln, pos), do: {ln, pos + 1}
+  defp update_counters(:=, ln, pos), do: {ln, pos + 1}
   defp update_counters({_, val}, ln, pos), do: {ln, pos + String.length(val)}
 end

@@ -8,3 +8,9 @@ my_array = [1, 2, 3]
 my_bool = true
 
 15 == 23
+
+if true then
+  something = 52
+else
+  -- should never reach here
+end
