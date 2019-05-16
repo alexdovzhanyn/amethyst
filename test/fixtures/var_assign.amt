@@ -5,7 +5,6 @@ my_int = (231123)
 my_float = 32.123131
 my_decimal = 313..3123
 my_array = [1, 2, 3]
+my_bool = true
 
-15 === 23
-
-123.231.1
+15 == 23

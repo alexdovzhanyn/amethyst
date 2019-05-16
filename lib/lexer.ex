@@ -22,36 +22,47 @@ defmodule Amethyst.Lexer do
     |> Enum.reverse()
   end
 
-  defp create_tokens(<<char::bytes-size(1), src::binary>>, tokens, ln, pos) do
+  defp create_tokens(src, tokens, ln, pos) do
     # Tokens typically have the structure of {type, value}
 
-    {token, src} =
-      cond do
-        char == " " -> {:whitespace, src}
-        char == "\n" -> {:newline, src}
-        char == "=" ->
-          <<next_char::bytes-size(1), rest::binary>> = src
-
-          if next_char == "=", do: {:equality_check, rest}, else: {:assignment, src}
-        char in ["\"", "'"] ->
-          [string, rest] = String.split(src, char, parts: 2)
-          {{:string, string}, rest}
-        char in ["[", "]", "{", "}", "(", ")", ","] -> {{:construct, char}, src}
-        Regex.match?(~r/[a-zA-Z]/, char) ->
-          [symbol, rest] = String.split(src, ~r/[^a-zA-Z0-9_$]/, parts: 2)
-
-          # When we split on the regex we lose a character at the point of the split.
-          # Let's find it and add it back to the src so it gets parsed
-          split_char = String.at(src, String.length(symbol))
-          {{:symbol, char <> symbol}, split_char <> rest}
-        Regex.match?(~r/[0-9]/, char) -> scan_number(char, src, ln, pos)
-        true -> Exception.raise(:syntax_error, "syntax error at '#{char}' [#{ln}:#{pos}]")
-      end
+    {token, src} = parse_src(src, ln, pos)
 
     # Update line number & position counters
     {ln, pos} = update_counters(token, ln, pos)
 
     create_tokens(src, [token | tokens], ln, pos)
+  end
+
+  defp parse_src(" " <> src, _ln, _pos), do: {:whitespace, src}
+  defp parse_src("\n" <> src, _ln, _pos), do: {:newline, src}
+  defp parse_src("==" <> src, _ln, _pos), do: {:==, src}
+  defp parse_src("=" <> src, _ln, _pos), do: {:=, src}
+  defp parse_src("true" <> src, _ln, _pos), do: {{:boolean, "true"}, src}
+  defp parse_src("false" <> src, _ln, _pos), do: {{:boolean, "false"}, src}
+
+  defp parse_src(<<c::bytes-size(1), src::binary>>, _ln, _pos) when c in ["\"", "'"] do
+    [string, rest] = String.split(src, c, parts: 2)
+    {{:string, string}, rest}
+  end
+
+  defp parse_src(<<c::bytes-size(1), src::binary>>, _ln, _pos) when c in ["[", "]", "{", "}", "(", ")", ","] do
+    {{:construct, c}, src}
+  end
+
+  # Should only get here if we couldn't parse language constructs above.
+  # Things here should really only be symbols or numbers
+  defp parse_src(<<char::bytes-size(1), src::binary>>, ln, pos) do
+    cond do
+      Regex.match?(~r/[a-zA-Z]/, char) ->
+        [symbol, rest] = String.split(src, ~r/[^a-zA-Z0-9_$]/, parts: 2)
+
+        # When we split on the regex we lose a character at the point of the split.
+        # Let's find it and add it back to the src so it gets parsed
+        split_char = String.at(src, String.length(symbol))
+        {{:symbol, char <> symbol}, split_char <> rest}
+      Regex.match?(~r/[0-9]/, char) -> scan_number(char, src, ln, pos)
+      true -> Exception.raise(:syntax_error, "syntax error at '#{char}' [#{ln}:#{pos}]")
+    end
   end
 
   # Scans through source to assemble a numerical value, which can be an integer,
@@ -83,7 +94,7 @@ defmodule Amethyst.Lexer do
   end
 
   defp update_counters(:newline, ln, _pos), do: {ln + 1, 1}
-  defp update_counters(:equality_check, ln, pos), do: {ln, pos + 2}
-  defp update_counters(t, ln, pos) when t in [:whitespace, :assignment], do: {ln, pos + 1}
+  defp update_counters(:==, ln, pos), do: {ln, pos + 2}
+  defp update_counters(t, ln, pos) when t in [:whitespace, :=], do: {ln, pos + 1}
   defp update_counters({_, val}, ln, pos), do: {ln, pos + String.length(val)}
 end
