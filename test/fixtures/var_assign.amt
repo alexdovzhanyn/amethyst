@@ -14,3 +14,11 @@ if true then
 else
   -- should never reach here
 end
+
+func my_func(p1, p2) do
+
+end
+
+some_lambda = (p1, p2) => {
+  -- does stuff here
+}

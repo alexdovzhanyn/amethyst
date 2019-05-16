@@ -18,7 +18,7 @@ defmodule Amethyst.Lexer do
 
   defp create_tokens(<<>>, tokens, _ln, _pos) do
     tokens
-    |> Enum.filter(& &1 not in [:whitespace, :newline])
+    |> Enum.filter(& &1 not in [:whitespace, :newline, :comment])
     |> Enum.reverse()
   end
 
@@ -36,6 +36,7 @@ defmodule Amethyst.Lexer do
   defp parse_src(" " <> src, _ln, _pos), do: {:whitespace, src}
   defp parse_src("\n" <> src, _ln, _pos), do: {:newline, src}
   defp parse_src("==" <> src, _ln, _pos), do: {:==, src}
+  defp parse_src("=>" <> src, _ln, _pos), do: {:arrow, src}
   defp parse_src("=" <> src, _ln, _pos), do: {:=, src}
   defp parse_src("true" <> src, _ln, _pos), do: {{:boolean, "true"}, src}
   defp parse_src("false" <> src, _ln, _pos), do: {{:boolean, "false"}, src}
@@ -43,6 +44,7 @@ defmodule Amethyst.Lexer do
   defp parse_src("then" <> src, _ln, _pos), do: {{:token, "then"}, src}
   defp parse_src("else" <> src, _ln, _pos), do: {{:token, "else"}, src}
   defp parse_src("end" <> src, _ln, _pos), do: {{:token, "end"}, src}
+  defp parse_src("func" <> src, _ln, _pos), do: {{:token, "func"}, src}
 
   defp parse_src("--" <> src, _ln, _pos) do
     [_comment, rest] = String.split(src, "\n", parts: 2)
@@ -107,5 +109,6 @@ defmodule Amethyst.Lexer do
   defp update_counters(:==, ln, pos), do: {ln, pos + 2}
   defp update_counters(:whitespace, ln, pos), do: {ln, pos + 1}
   defp update_counters(:=, ln, pos), do: {ln, pos + 1}
+  defp update_counters(:arrow, ln, pos), do: {ln, pos + 2}
   defp update_counters({_, val}, ln, pos), do: {ln, pos + String.length(val)}
 end
