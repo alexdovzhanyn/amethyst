@@ -1,6 +1,9 @@
 defmodule Amethyst.Lexer do
   alias Amethyst.Exception
 
+  @single_pos [:whitespace, :=, :!, :>, :<]
+  @double_pos [:==, :arrow, :||, :&&, :\\, :pipe, :>=, :<=]
+
   @doc """
     Converts Amethyst source code to tokens
   """
@@ -39,8 +42,14 @@ defmodule Amethyst.Lexer do
   defp parse_src("=>" <> src, _ln, _pos), do: {:arrow, src}
   defp parse_src("=" <> src, _ln, _pos), do: {:=, src}
   defp parse_src("||" <> src, _ln, _pos), do: {:||, src}
+  defp parse_src("\\\\" <> src, _ln, _pos), do: {:\\, src}
   defp parse_src("&&" <> src, _ln, _pos), do: {:&&, src}
   defp parse_src("!" <> src, _ln, _pos), do: {:!, src}
+  defp parse_src(">>" <> src, _ln, _pos), do: {:pipe, src}
+  defp parse_src(">=" <> src, _ln, _pos), do: {:>=, src}
+  defp parse_src(">" <> src, _ln, _pos), do: {:>, src}
+  defp parse_src("<=" <> src, _ln, _pos), do: {:<=, src}
+  defp parse_src("<" <> src, _ln, _pos), do: {:<, src}
   defp parse_src("true" <> src, _ln, _pos), do: {{:boolean, "true"}, src}
   defp parse_src("false" <> src, _ln, _pos), do: {{:boolean, "false"}, src}
   defp parse_src("if" <> src, _ln, _pos), do: {{:token, "if"}, src}
@@ -48,6 +57,9 @@ defmodule Amethyst.Lexer do
   defp parse_src("else" <> src, _ln, _pos), do: {{:token, "else"}, src}
   defp parse_src("end" <> src, _ln, _pos), do: {{:token, "end"}, src}
   defp parse_src("func" <> src, _ln, _pos), do: {{:token, "func"}, src}
+  defp parse_src("return" <> src, _ln, _pos), do: {{:token, "return"}, src}
+  defp parse_src("import" <> src, _ln, _pos), do: {{:token, "import"}, src}
+  defp parse_src("module" <> src, _ln, _pos), do: {{:token, "module"}, src}
   defp parse_src("<::" <> src, _ln, _pos), do: {{:structure, "<::"}, src}
   defp parse_src("::>" <> src, _ln, _pos), do: {{:structure, "::>"}, src}
   defp parse_src("+" <> src, _ln, _pos), do: {{:op, "+"}, src}
@@ -67,7 +79,7 @@ defmodule Amethyst.Lexer do
     {{:string, string}, rest}
   end
 
-  defp parse_src(<<c::bytes-size(1), src::binary>>, _ln, _pos) when c in ["[", "]", "{", "}", "(", ")", ",", "|", ":"] do
+  defp parse_src(<<c::bytes-size(1), src::binary>>, _ln, _pos) when c in ["[", "]", "{", "}", "(", ")", ",", "|", ":", "."] do
     {{:construct, c}, src}
   end
 
@@ -98,6 +110,8 @@ defmodule Amethyst.Lexer do
   defp scan_number(num, src, ln, pos) do
     <<char::bytes-size(1), rest::binary>> = src
 
+    # TODO: We can represent numbers using the 0x format as well. We need to
+    # account for this here.
     cond do
       Regex.match?(~r/[^\.0-9]/, char) -> finish_number_scan(num, src)
       char == "." && String.last(num) != "." && String.contains?(num, ".") ->
@@ -120,9 +134,9 @@ defmodule Amethyst.Lexer do
 
   defp update_counters(:newline, ln, _pos), do: {ln + 1, 1}
   defp update_counters(:comment, ln, pos), do: {ln, pos}
-  defp update_counters(:whitespace, ln, pos), do: {ln, pos + 1}
-  defp update_counters(:arrow, ln, pos), do: {ln, pos + 2}
   defp update_counters({_, val}, ln, pos), do: {ln, pos + String.length(val)}
+  defp update_counters(atom, ln, pos) when is_atom(atom) and atom in @single_pos, do: {ln, pos + 1}
+  defp update_counters(atom, ln, pos) when is_atom(atom) and atom in @double_pos, do: {ln, pos + 2}
 
   defp update_counters(atom, ln, pos) when is_atom(atom) do
     l =

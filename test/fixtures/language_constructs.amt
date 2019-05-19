@@ -10,7 +10,7 @@ my_array = [1, 2, 3]
 my_bool = true
 my_tuple = |1, 2, 3|
 my_keyword_map = {a: 'b', apple: 'orange', number: 5}
--- my_binary_data = <::0x1, 0x23, 0x42::>
+my_binary_data = <::0x1, 0x23, 0x42::>
 
 15 == 23
 
@@ -21,7 +21,7 @@ else
 end
 
 func my_func(p1, p2) do
-
+  return (p1, p2)
 end
 
 some_lambda = (p1, p2) => {
@@ -37,3 +37,17 @@ some_lambda = (p1, p2) => {
 !true
 
 true || false && !x
+
+5
+>> my_func(4)
+>> some_lambda()
+
+module Greeter do
+  import Time
+
+  func welcome(name) do
+    puts "Hello #{name}. The time is #{Time.now()}"
+  end
+end
+
+Greeter.welcome("Michael")
